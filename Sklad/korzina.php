@@ -1,0 +1,162 @@
+<?php
+session_start();
+?>
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "bd_sklad";
+
+$conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+$conn ->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+$iN_ORDER=[];
+$iN_ORDER2=[];
+
+if (isset($_SESSION["user"])){
+    $data =$conn->prepare("SELECT * FROM korzina where iduser=".$_SESSION['user']['id']);
+    $data ->execute();
+    $result = $data ->fetchAll();
+    foreach( $result as $id)
+    {
+        $result = $id['idtovar'];
+        $data =$conn->prepare("SELECT * FROM ognestrel  where id='".$result."'");
+        $data ->execute();
+        $top = $data ->fetch();
+        if($top){
+            array_push($iN_ORDER,$top);
+        }
+    }
+
+    $data =$conn->prepare("SELECT * FROM korzina where iduser=".$_SESSION['user']['id']);
+    $data ->execute();
+    $result = $data ->fetchAll();
+    foreach( $result as $id)
+    {
+        $result = $id['idtovar'];
+        $data =$conn->prepare("SELECT * FROM ekipirovka where id='".$result."'");
+        $data ->execute();
+        $pop = $data ->fetch();
+        if ($pop){
+            array_push($iN_ORDER2,$pop);
+        }
+    }
+}
+?>
+<!DOCTYPE>
+<html>
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>Склад оружия</title>
+    <link rel="stylesheet" type="text/css" href="stili.css.php">
+    <script src="jquery-3.6.1.min.js"></script>
+    <script src="korzina.js"></script>
+</head>
+<body>
+<?php
+if (isset($_SESSION["user"])) {
+    echo "<input type='hidden' value='".$_SESSION['user']['id']."' id='sesionid'>";
+} else {
+    echo "<input type='hidden' value='-1' id='sesionid'>";
+}
+?>
+<div class="verh">
+
+    <div class="panel">
+        <div class="side-title">
+            <?php
+            if (isset($_SESSION['user']['name']))
+                echo ("<h3>".$_SESSION['user']['name']." ".$_SESSION['user']['name2']."</h3>");
+            else echo "<h3>Войдите в аккаунт</h3>";
+
+            ?>
+        </div>
+        <?php
+        if (isset($_SESSION['user']['name'])){
+            echo "<div><form action='logout.php' style='color: #FFFFFF'><button class='vhod'>Выход</button></form></div>";
+        }
+        else
+            echo " <div ><form action='vhod.php' style='color: #FFFFFF'><button class='vhod'>Вход</button></form></div>
+        <div><form action='registraciy.php' style='color: #FFFFFF'><button class='registr'>Регистрация</button></form></div>"
+        ?>
+    </div>
+    <ul>
+        <a href="index.php"><img class="img1" src="1.png"></a>
+        <li><a href="#">Контакты</a>
+            <ul>
+                <li><a href="#">Viber:+7149162377</a></li>
+                <li><a href="https://vk.com/arturkvasyuk">Вконтакте</a></li>
+                <li><a href="https://t.me/+aUoRSkBqKvBhNGFi">Telegram</a></li>
+            </ul>
+        </li>
+        <li><a>Каталог товаров</a>
+            <ul>
+                <li><a href="avtomati.php">Автоматы</a></li>
+                <li><a href="vintovki.php">Винтовки</a></li>
+                <li><a href="droboviki.php">Дробовики</a></li>
+                <li><a href="pistoleti.php">Пистолеты</a></li>
+                <li><a href="bronijeleti.php">Бронижелеты</a></li>
+                <li><a href="patroni.php">Патроны</a></li>
+            </ul>
+        <li><a href="korzina.php">Корзина</a></li>
+        <?php
+        if (isset($_SESSION['user']['id'])){
+            if ($_SESSION['user']['id'] == '7'){  //kvasuk_artur@mail.ru   qwerty
+                echo "<li><a href='dobavlenie.php'>Администратор</a></li>";
+            }
+
+        }
+        else {
+            echo
+            "";
+        }
+        ?>
+        </li>
+    </ul>
+</div>
+<p class="p">МОЯ КОРЗИНА</p>
+<main>
+    <section>
+        <article class="post" id="in-check">
+            <?php
+            foreach( $iN_ORDER as $id)
+            {
+                    echo "<div class='f1'>";
+                    $foto= $id['img'];
+                    $nasvanie=$id['nazvanie'];
+                    $strana=$id['strana'];
+                    $marka=$id['marka'];
+                    $dlina=$id['dlina'];
+                    $kalibr=$id['kalibr'];
+                    $dlina_stvola=$id['dlina_stvola'];
+                    $ves=$id['ves'];
+                    $magasin= $id['magasin'];
+                    $cena = $id['cena'];
+                    echo"<img src='$foto' class='img3'>";
+                    echo "<span class='podpisi'>Название: $nasvanie<br>Производитель:$strana<br>Марка: $marka<br> Общая длина: $dlina<br>Калибр: $kalibr <br>Длина ствола: $dlina_stvola <br> Масса: $ves <br> Ёмкость магазина: $magasin <br><span class='cena'>Цена: $cena</span></span><br><input type='button' class='st12' value='Удалить' data-id='".$id['id']."'>";
+                    echo "</div>";
+            }
+            ?>
+            <?php
+            if(count($iN_ORDER2)){
+            foreach ($iN_ORDER2 as $img){
+                echo "<div class='f1'>";
+                $foto= $img['img'];
+                $nasvanie=$img['nazvanie'];
+                $strana=$img['strana'];
+                $marka=$img['marka'];
+                $ves=$img['ves'];
+                $cena=$img['cena'];
+                echo"<img src='$foto' class='img3'>";
+                echo "<span class='podpisi'>Название: $nasvanie<br>Производитель:$strana<br> Масса: $ves<br> Марка: $marka<br><span class='cena'>Цена: $cena</span></span><br><input type='button' class='st12' value='Удалить' data-id='".$img['id']."'>";
+                echo "</div>";
+            }
+            }
+            ?>
+        </article>
+    </section>
+</main>
+
+</div>
+</body>
+</html>
